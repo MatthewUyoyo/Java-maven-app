@@ -1,9 +1,8 @@
 pipeline {
-    pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = matthewuyoyo/demo-app
+        DOCKER_IMAGE = 'matthewuyoyo/demo-app'
         REPO_URL = "https://github.com/MatthewUyoyo/Java-maven-app.git"
     }
 
