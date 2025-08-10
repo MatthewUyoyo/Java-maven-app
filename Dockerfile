@@ -1,8 +1,29 @@
-FROM amazoncorretto:8-alpine3.17-jre 
+# Use an official Maven image to build the app
+FROM maven:3.9.4-eclipse-temurin-17 AS build
 
-EXPOSE 8080 
+# Set working directory inside container
+WORKDIR /app
 
-COPY ./target/java-maven-app-*.jar /usr/app/
-WORKDIR /usr/app 
+# Copy the pom.xml and download dependencies first (for caching)
+COPY pom.xml .
 
-CMD java -jar java-maven-app-*.jar
+# Download dependencies
+RUN mvn dependency:go-offline
+
+# Copy the rest of the source code
+COPY src ./src
+
+# Build the application
+RUN mvn clean package -DskipTests
+
+# Use a lightweight JRE image to run the app
+FROM eclipse-temurin:17-jre-alpine
+
+# Copy the built jar from the previous stage
+COPY --from=build /app/target/*.jar /app/app.jar
+
+# Expose port 8080
+EXPOSE 8080
+
+# Run the jar file
+ENTRYPOINT ["java","-jar","/app/app.jar"]
