@@ -1,27 +1,35 @@
 pipeline {
+    pipeline {
     agent any
 
-    tools {
-        maven 'maven-3.9'
+    environment {
+        DOCKER_IMAGE = matthewuyoyo/demo-app
+        REPO_URL = "https://github.com/MatthewUyoyo/Java-maven-app.git"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/MatthewUyoyo/Java-maven-app.git', branch: 'master'
+                git branch: 'master', url: "${REPO_URL}"
             }
         }
 
-        stage('Build & Test') {
+        stage('Build') {
             steps {
                 sh 'mvn clean install'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test'
             }
         }
 
         stage('Docker Build') {
             steps {
                 script {
-                    dockerImage = docker.build("java-maven-app:latest")
+                    docker.build("${DOCKER_IMAGE}")
                 }
             }
         }
@@ -29,9 +37,15 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    dockerImage.run('-p 8081:8080')
+                    docker.image("${DOCKER_IMAGE}").run('-d -p 8081:8080')
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finished.'
         }
     }
 }
