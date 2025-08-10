@@ -22,8 +22,8 @@ pipeline {
         stage('Docker Build and Push') {
             steps {
                 script {
-                    docker.withRegistry('', "${DOCKER_CREDENTIALS}") {
-                        def appImage = docker.build("${DOCKER_IMAGE}:latest")
+                    docker.withRegistry('', env.DOCKER_CREDENTIALS) {
+                        def appImage = docker.build("${env.DOCKER_IMAGE}:latest")
                         appImage.push()
                     }
                 }
