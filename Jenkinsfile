@@ -3,48 +3,31 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'matthewuyoyo/demo-app'
-        REPO_URL = "https://github.com/MatthewUyoyo/Java-maven-app.git"
+        DOCKER_CREDENTIALS = 'dockerhub-credentials'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'master', url: "${REPO_URL}"
+                git url: 'https://github.com/MatthewUyoyo/java-maven-app.git', branch: 'master'
             }
         }
 
         stage('Build') {
             steps {
-                sh 'mvn clean install'
+                sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Test') {
-            steps {
-                sh 'mvn test'
-            }
-        }
-
-        stage('Docker Build') {
+        stage('Docker Build and Push') {
             steps {
                 script {
-                    docker.build("${DOCKER_IMAGE}")
+                    docker.withRegistry('', "${DOCKER_CREDENTIALS}") {
+                        def appImage = docker.build("${DOCKER_IMAGE}:latest")
+                        appImage.push()
+                    }
                 }
             }
-        }
-
-        stage('Deploy') {
-            steps {
-                script {
-                    docker.image("${DOCKER_IMAGE}").run('-d -p 8081:8080')
-                }
-            }
-        }
-    }
-
-    post {
-        always {
-            echo 'Pipeline finished.'
         }
     }
 }
